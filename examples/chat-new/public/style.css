@@ -9,7 +9,7 @@ html {
   -webkit-font-smoothing: antialiased;
 }
 
-html, input {
+html, input, textarea {
   font-family:
     "HelveticaNeue-Light",
     "Helvetica Neue Light",
@@ -109,10 +109,38 @@ ul {
   text-align: center;
 }
 
+/* Shared Area */
+
+.ansContainer{
+  position: relative;
+  border: 1px solid gray;
+  height: 20%;
+}
+.ansArea {
+  width: 100%;
+  height: 100%;
+  resize: none;
+  border: none;
+}
+.ansBody {
+  color: gray;
+  font-size: 120%;
+  padding: 5px 10px;
+}
+.ansStatus {
+  color: gray;
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
+  text-align: right;
+  font-size: 80%;
+  padding-right: 20px;
+}
+
 /* Messages */
 
 .chatArea {
-  height: 100%;
+  height: 80%;
   padding-bottom: 60px;
 }
 

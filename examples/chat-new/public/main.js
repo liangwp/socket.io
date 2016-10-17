@@ -15,6 +15,7 @@ $(function() {
 
   var $loginPage = $('.login.page'); // The login page
   var $chatPage = $('.chat.page'); // The chatroom page
+  var $answerInput = $('.ansArea'); // The answer input at the top
 
   // Prompt for setting a username
   var username;
@@ -193,16 +194,26 @@ $(function() {
   $window.keydown(function (event) {
     // Auto-focus the current input when a key is typed
     if (!(event.ctrlKey || event.metaKey || event.altKey)) {
-      $currentInput.focus();
-    }
-    // When the client hits ENTER on their keyboard
-    if (event.which === 13) {
-      if (username) {
-        sendMessage();
-        socket.emit('stop typing');
-        typing = false;
+      if (document.activeElement != $answerInput[0]) {
+        $currentInput.focus();
+        // When the client hits ENTER on their keyboard
+        if (event.which === 13) {
+          if (username) {
+            sendMessage();
+            socket.emit('stop typing');
+            typing = false;
+          } else {
+            setUsername();
+          }
+        }
       } else {
-        setUsername();
+        // if answer box is not locked, lock the answer box to this user.
+        console.log('typing on answer box');
+        if (event.which === 13) {
+          event.stopPropagation(); // prevents the linebreak from going into the textarea
+          console.log("unlock the answer field");
+          $currentInput.focus(); // send focus back to the chat input box.
+        }
       }
     }
   });
