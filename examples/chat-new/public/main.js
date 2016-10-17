@@ -196,7 +196,7 @@ $(function() {
     if (!(event.ctrlKey || event.metaKey || event.altKey)) {
       if (document.activeElement != $answerInput[0]) {
         $currentInput.focus();
-        // When the client hits ENTER on their keyboard
+        // When the client hits ENTER on their keyboard: 13 = ENTER
         if (event.which === 13) {
           if (username) {
             sendMessage();
@@ -207,10 +207,17 @@ $(function() {
           }
         }
       } else {
-        // if answer box is not locked, lock the answer box to this user.
+        // typing on answer box
         console.log('typing on answer box');
+        socket.emit('ans typing', {
+          username: username
+        });
         if (event.which === 13) {
           event.stopPropagation(); // prevents the linebreak from going into the textarea
+          socket.emit('ans done', {
+            username: username,
+            answer: $answerInput.val()
+          });
           console.log("unlock the answer field");
           $currentInput.focus(); // send focus back to the chat input box.
         }
@@ -273,5 +280,14 @@ $(function() {
   // Whenever the server emits 'stop typing', kill the typing message
   socket.on('stop typing', function (data) {
     removeChatTyping(data);
+  });
+
+  //
+  socket.on('ans typing', function (data) {
+    console.log(data.username + ' is typing answer');
+  });
+  socket.on('ans done', function (data) {
+    console.log('answer is now: ' + data.answer);
+    $answerInput.val(data.answer);
   });
 });

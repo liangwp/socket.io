@@ -53,6 +53,21 @@ io.on('connection', function (socket) {
     });
   });
 
+  // someone is typing inside the answer field
+  socket.on('ans typing', function (data) {
+    console.log(data.username + " is typing...");
+    socket.broadcast.emit('ans typing', {
+      username: data.username
+    });
+  });
+
+  socket.on('ans done', function (data) {
+    console.log(data.username + " has typed: " + data.answer);
+    socket.broadcast.emit('ans done', {
+      answer: data.answer
+    });
+  });
+
   // when the client emits 'stop typing', we broadcast it to others
   socket.on('stop typing', function () {
     socket.broadcast.emit('stop typing', {

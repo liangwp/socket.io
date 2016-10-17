@@ -121,6 +121,7 @@ ul {
   height: 100%;
   resize: none;
   border: none;
+  outline: none;
 }
 .ansBody {
   color: gray;
