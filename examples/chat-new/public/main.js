@@ -16,6 +16,44 @@ $(function() {
   var $loginPage = $('.login.page'); // The login page
   var $chatPage = $('.chat.page'); // The chatroom page
   var $answerInput = $('.ansArea'); // The answer input at the top
+  var $answerStatus = $('.ansStatus'); // The portion that says "X is editing..."
+  var $answerContainer = $('.ansContainer'); // the border part
+
+  var set_field_status = function (field_status) { //0 = open; 1 = locked; 2 = locked for this user;
+    switch (field_status) {
+      case 0:
+        $answerContainer.removeClass('border1 border2');
+        $answerContainer.addClass('border0')
+        break;
+      case 1:
+      $answerContainer.removeClass('border0 border2');
+      $answerContainer.addClass('border1')
+        break;
+      case 2:
+      $answerContainer.removeClass('border0 border1');
+      $answerContainer.addClass('border2')
+        break;
+      default:
+        console.log('error');
+    }
+  }
+
+
+  // bells and whistles, wrapped in a closure
+  var playnotification = (function () {
+    var all_tracks = [];
+    all_tracks.push(new Audio('served.mp3'));
+    all_tracks.push(new Audio('gets-in-the-way.mp3'));
+    all_tracks.push(new Audio('you-wouldnt-believe.mp3'));
+    all_tracks.push(new Audio('coins.mp3'));
+    // console.log("audio in");
+    function playaudio() {
+      var playthis = Math.round(Math.random()*(all_tracks.length-1));
+      all_tracks[playthis].play();
+    }
+    // console.log("play function done");
+    return playaudio;
+  })(); // self-invoking, assigns the inside 'playaudio' function to 'playnotification'.
 
   // Prompt for setting a username
   var username;
@@ -66,6 +104,7 @@ $(function() {
       });
       // tell server to execute 'new message' and send along one parameter
       socket.emit('new message', message);
+      playnotification();
     }
   }
 
@@ -189,6 +228,14 @@ $(function() {
     return COLORS[index];
   }
 
+  // click event, prevent focus on $answerInput unless field status is 0
+  $answerInput.on('mousedown', function(event) {
+    event.preventDefault();
+    // console.log('request a lock from server')
+    socket.emit('request lock');
+    // event.stopImmediatePropagation();
+  })
+
   // Keyboard events
 
   $window.keydown(function (event) {
@@ -208,7 +255,7 @@ $(function() {
         }
       } else {
         // typing on answer box
-        console.log('typing on answer box');
+        // console.log('typing on answer box');
         socket.emit('ans typing', {
           username: username
         });
@@ -218,7 +265,8 @@ $(function() {
             username: username,
             answer: $answerInput.val()
           });
-          console.log("unlock the answer field");
+          // console.log("unlock the answer field");
+          socket.emit('request release');
           $currentInput.focus(); // send focus back to the chat input box.
         }
       }
@@ -252,11 +300,16 @@ $(function() {
       prepend: true
     });
     addParticipantsMessage(data);
+    if (data.lockstatus)
+    {
+      set_field_status(1);
+    }
   });
 
   // Whenever the server emits 'new message', update the chat body
   socket.on('new message', function (data) {
     addChatMessage(data);
+    playnotification();
   });
 
   // Whenever the server emits 'user joined', log it in the chat body
@@ -282,12 +335,27 @@ $(function() {
     removeChatTyping(data);
   });
 
-  //
+  // socket messages for typing in answer field
   socket.on('ans typing', function (data) {
-    console.log(data.username + ' is typing answer');
+    $answerStatus[0].innerHTML = data.username + ' is editing...';
   });
   socket.on('ans done', function (data) {
-    console.log('answer is now: ' + data.answer);
+    $answerStatus[0].innerHTML = '';
     $answerInput.val(data.answer);
   });
+
+  // socket messages for locking and unlocking the answer field
+  socket.on('locked for you', function() {
+    // console.log('server says \'locked for you\'');
+    set_field_status(2);
+    $answerInput.focus();
+  });
+  socket.on('locked for someone else', function() {
+    // console.log('server says \'locked for someone else\'');
+    set_field_status(1);
+  });
+  socket.on('released', function() {
+    // console.log('server says \'released\'');
+    set_field_status(0);
+  })
 });

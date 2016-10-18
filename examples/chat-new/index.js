@@ -15,6 +15,8 @@ app.use(express.static(__dirname + '/public'));
 // Chatroom
 
 var numUsers = 0;
+var field_locked = false;
+var locking_user = null;
 
 io.on('connection', function (socket) {
   var addedUser = false;
@@ -37,7 +39,8 @@ io.on('connection', function (socket) {
     ++numUsers;
     addedUser = true;
     socket.emit('login', {
-      numUsers: numUsers
+      numUsers: numUsers,
+      lockstatus: field_locked
     });
     // echo globally (all clients) that a person has connected
     socket.broadcast.emit('user joined', {
@@ -55,14 +58,13 @@ io.on('connection', function (socket) {
 
   // someone is typing inside the answer field
   socket.on('ans typing', function (data) {
-    console.log(data.username + " is typing...");
     socket.broadcast.emit('ans typing', {
       username: data.username
     });
   });
 
   socket.on('ans done', function (data) {
-    console.log(data.username + " has typed: " + data.answer);
+    // console.log(data.username + " has typed: " + data.answer);
     socket.broadcast.emit('ans done', {
       answer: data.answer
     });
@@ -85,6 +87,29 @@ io.on('connection', function (socket) {
         username: socket.username,
         numUsers: numUsers
       });
+      if (socket.username == locking_user) // release the lock if this user is locking it.
+      {
+        field_locked = false;
+        locking_user = null;
+        socket.broadcast.emit('released');
+      }
     }
   });
+
+  // socket messages for locking and unlocking the answer field
+  socket.on('request lock', function() {
+    if (!field_locked || locking_user == socket.username) {
+      field_locked = true;
+      locking_user = socket.username;
+      socket.emit('locked for you');
+      socket.broadcast.emit('locked for someone else');
+    }
+  });
+  socket.on('request release', function () {
+    field_locked = false;
+    locking_user = null;
+    socket.emit('released');
+    socket.broadcast.emit('released');
+  });
+
 });

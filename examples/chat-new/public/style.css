@@ -111,10 +111,19 @@ ul {
 
 /* Shared Area */
 
-.ansContainer{
+.ansContainer {
   position: relative;
-  border: 1px solid gray;
+
   height: 20%;
+}
+.border0 {
+  border: 1px solid gray;
+}
+.border1 {
+  border: 2px solid red;
+}
+.border2 {
+  border: 2px solid green;
 }
 .ansArea {
   width: 100%;
