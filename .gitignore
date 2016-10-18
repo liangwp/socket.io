@@ -1,5 +1,6 @@
 .DS_Store
 lib-cov
+*.mp3
 *.seed
 *.log
 *.csv
