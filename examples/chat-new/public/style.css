@@ -147,6 +147,17 @@ ul {
   padding-right: 20px;
 }
 
+.releaseButton {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  padding: 2px;
+  font-size: 150%;
+  border:0px solid black;
+  background-color: #eee;
+  display: none;
+}
+
 /* Messages */
 
 .chatArea {
@@ -172,6 +183,13 @@ ul {
   text-align: right;
 }
 
+.userList {
+  position: absolute;
+  right: 15px;
+  padding: 5px;
+  text-align: right;
+  border: 2px solid gray;
+}
 /* Input */
 
 .inputMessage {

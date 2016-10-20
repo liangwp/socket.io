@@ -18,6 +18,8 @@ $(function() {
   var $answerInput = $('.ansArea'); // The answer input at the top
   var $answerStatus = $('.ansStatus'); // The portion that says "X is editing..."
   var $answerContainer = $('.ansContainer'); // the border part
+  var $userslist = $('.userList'); // the list of users
+  var $releaseButton = $('.releaseButton'); // the release button
 
   var set_field_status = function (field_status) { //0 = open; 1 = locked; 2 = locked for this user;
     switch (field_status) {
@@ -45,7 +47,7 @@ $(function() {
     all_tracks.push(new Audio('served.mp3'));
     all_tracks.push(new Audio('gets-in-the-way.mp3'));
     all_tracks.push(new Audio('you-wouldnt-believe.mp3'));
-    all_tracks.push(new Audio('coins.mp3'));
+    // all_tracks.push(new Audio('coins.mp3')); // not for this purpose...
     // console.log("audio in");
     function playaudio() {
       var playthis = Math.round(Math.random()*(all_tracks.length-1));
@@ -72,6 +74,17 @@ $(function() {
       message += "there are " + data.numUsers + " participants";
     }
     log(message);
+
+    while ($userslist[0].firstChild) {
+      $userslist[0].removeChild($userslist[0].firstChild); // just remove all and recreate, instead of finding and deleting.
+    }
+    for (k in data.list)
+    {
+      var a_user = document.createElement("div");
+      var a_username = document.createTextNode(data.list[k]);
+      a_user.appendChild(a_username);
+      $userslist[0].appendChild(a_user);
+    }
   }
 
   // Sets the client's username
@@ -228,7 +241,17 @@ $(function() {
     return COLORS[index];
   }
 
-  // click event, prevent focus on $answerInput unless field status is 0
+  function releaseLock() {
+    socket.emit('ans done', {
+      username: username,
+      answer: $answerInput.val()
+    });
+    // console.log("unlock the answer field");
+    socket.emit('request release');
+    $currentInput.focus(); // send focus back to the chat input box.
+  }
+
+  // on mousedown, request lock, prevent focus on $answerInput unless field status is 0
   $answerInput.on('mousedown', function(event) {
     event.preventDefault();
     // console.log('request a lock from server')
@@ -261,13 +284,7 @@ $(function() {
         });
         if (event.which === 13) {
           event.stopPropagation(); // prevents the linebreak from going into the textarea
-          socket.emit('ans done', {
-            username: username,
-            answer: $answerInput.val()
-          });
-          // console.log("unlock the answer field");
-          socket.emit('request release');
-          $currentInput.focus(); // send focus back to the chat input box.
+          releaseLock();
         }
       }
     }
@@ -287,6 +304,11 @@ $(function() {
   // Focus input when clicking on the message input's border
   $inputMessage.click(function () {
     $inputMessage.focus();
+  });
+
+  // also release the lock when the release button is clicked. Note, duplicated code.
+  $releaseButton.on("click", function () {
+    releaseLock();
   });
 
   // Socket events
@@ -349,13 +371,18 @@ $(function() {
     // console.log('server says \'locked for you\'');
     set_field_status(2);
     $answerInput.focus();
+
+    // show release button when the field is locked for this user
+    $releaseButton[0].style.display = "block";
   });
-  socket.on('locked for someone else', function() {
+  socket.on('locked for someone else', function(data) {
     // console.log('server says \'locked for someone else\'');
+    $answerStatus[0].innerHTML = data.user + ' has locked the field.';
     set_field_status(1);
   });
   socket.on('released', function() {
     // console.log('server says \'released\'');
+    $releaseButton[0].style.display = "none";
     set_field_status(0);
   })
 });
